@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Sacred Therapy AU <onboarding@resend.dev>",
+      from: "Sacred Therapy AU <hello@sacredtherapy.co>",
       to: email,
       subject: "A little something to begin with",
       html: `
