@@ -59,7 +59,9 @@ function formatTime(seconds: number) {
 const PREVIEW_SECONDS = 60;
 const FADE_MS = 3000;
 const GATE_STORAGE_KEY = "ss-gate-passed";
-const GATE_ENABLED = true;
+// Preview/email gate is a separate follow-up task — keep the logic wired but
+// inert so this pass is raw playback only. Flip to true to re-enable the gate.
+const GATE_ENABLED = false;
 
 export default function SoundSanctuary() {
   const [active, setActive] = useState<(typeof FEELINGS)[number]>("All");
