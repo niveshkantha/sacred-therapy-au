@@ -177,3 +177,69 @@ honors the lock and refuses to start a second dev server for this project direct
 Fix: confirm nothing is actually listening on the port (`Get-NetTCPConnection -LocalPort 3456`),
 then delete `.next/dev/lock` and restart via `preview_start`. Happened twice this session (2026-07-02);
 if it recurs, this is the first thing to check before deeper debugging.
+
+## ✅ LIVE: Deployed to Netlify with GitHub continuous deployment (2026-07-03)
+
+**The site is live at https://sacredtherapy.co** with working push-to-deploy.
+
+### Hosting / CI setup
+- **GitHub repo**: https://github.com/niveshkantha/sacred-therapy-au — **PUBLIC**, default branch `main`.
+  (Made public deliberately; see "contributor block" below. ⚠️ This means internal docs in the repo —
+  `PROJECT_STATE.md`, `CLAUDE.md`, `AGENTS.md`, and the Supabase project ref — are publicly visible.
+  To re-privatise, first move those docs out AND verify a Git contributor in Netlify, or the free-plan
+  single-contributor limit re-blocks builds.)
+- **Netlify production site**: name `sacredtherapy`, siteId `eef27b87-0591-4d03-852c-f479ee1344a1`,
+  team `sacredtherapyau` (Free plan). Custom domain **sacredtherapy.co**. Forms feature enabled (unused).
+- **Netlify account**: `sacredtherapyau@gmail.com` (owner "Neshi Jayamaha"), password login, **no GitHub
+  account connected** to Netlify.
+- **Continuous deployment**: repo linked in the Netlify UI → every push to `main` auto-builds and
+  auto-publishes via the Next.js runtime (`@netlify/plugin-nextjs` v5). `/api/begin` runs as a serverless function.
+- **`netlify.toml`** (committed): build command `npm run build`, `NODE_VERSION = 22`, **`publish = ".next"`**
+  (required for the Next runtime — leaving it unset defaults publish to the repo root and the plugin errors).
+- **Git commit identity**: commits are authored as **`sacredtherapyau@gmail.com`** (the Netlify account email).
+  This is required — see contributor block below. `git config user.email` in this repo is set to that.
+
+### ⚠️ Redundant Netlify site to delete
+An extra site **`sacred-therapy-au`** (siteId `4c1a429b-9947-4a03-99dd-fdbc437bc6b8`) was created early by
+mistake before the real `sacredtherapy` site was found. It holds copies of all 5 env vars **including the
+secret keys** and is otherwise unused. Delete it in the Netlify dashboard (Site configuration → Danger zone).
+
+### Environment variables (all 5 set on the `sacredtherapy` site)
+Set as **non-secret**, scoped to `builds,functions,runtime,post_processing`, context `all`:
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
+`RESEND_API_KEY`, `NEXT_PUBLIC_SITE_URL=https://sacredtherapy.co`.
+- ⚠️ **Do NOT mark the two keys as "secret"** on Netlify: when they were set secret via the MCP they did
+  not reach the function runtime (the route returned 500 "not configured"). Non-secret is safe here because
+  `SUPABASE_SERVICE_ROLE_KEY` / `RESEND_API_KEY` are **not** `NEXT_PUBLIC_` and so are never inlined into the
+  client bundle. Env-var changes require a **new deploy** to take effect for functions.
+
+### Code change made for deployability
+- `src/lib/supabaseAdmin.ts`: was `export const supabaseAdmin = createClient(...)` at module scope →
+  now a lazy **`getSupabaseAdmin()`** factory (constructs on first call, caches). Module-scope creation threw
+  "supabaseKey is required." during Next's build-time page-data collection because the service-role key is
+  absent at build time → "Failed to collect page data for /api/begin".
+- `src/app/api/begin/route.ts`: imports the factory, creates the client **inside** `POST`, and has a runtime
+  env guard at the top of the handler returning a clean `500` if any required env var is missing.
+- `/api/begin` is the only API route / only `createClient` call in the codebase — nothing else had the pattern.
+
+### Four blockers cleared to get the first successful deploy (in order)
+1. **Publish dir** — Next runtime v5 rejected publish=repo-root. Fix: `publish = ".next"` in `netlify.toml`.
+2. **Unrecognized Git contributor** — Netlify Free plan blocks builds on **private** repos from committers who
+   aren't verified team members. Commits were authored as `niveshkantha@gmail.com` (≠ Netlify account). Fixed by
+   (a) making the repo **public** and (b) re-authoring all commits to `sacredtherapyau@gmail.com`.
+3. **Build-time client init** — the module-scope Supabase client (above). Fixed with the lazy factory.
+   Verified locally by running `npm run build` with the secret env vars stripped from `.env.local`.
+4. **Runtime env vars missing** — the two keys set as "secret" never reached functions. Re-added non-secret,
+   functions-scoped, then redeployed.
+
+### Remaining before public launch
+- **Verify a sending domain in Resend** — the gift email sends from `onboarding@resend.dev`; until a domain is
+  verified, Resend delivers **only to `sacredtherapyau@gmail.com` / `niveshkantha@gmail.com`**. Real visitors
+  get no email until this is done. (Then update the `from:` address in `route.ts` to the verified domain.)
+- **Decide on repo visibility** (public exposes internal docs — see above).
+- Consider moving the 248 MB of `public/` audio/video out of Git (Git LFS or Supabase Storage/CDN) — it makes
+  every CI checkout pull 248 MB and slows builds.
+
+### Verified working end-to-end (infra)
+Push→build→publish confirmed; `GET /api/begin`→405, `POST {}`→400 (validation reached, all env resolved).
+A full submission test (real `subscribers` row + gift email) was the last optional step.
