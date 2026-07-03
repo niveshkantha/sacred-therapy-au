@@ -1,10 +1,26 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { getGift } from "@/lib/gifts";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3456";
 
 export async function POST(request: Request) {
+  // Runtime guard: on Netlify the secret env vars are only present at
+  // function runtime, so fail clearly here rather than letting a client
+  // constructor throw an opaque error.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    !process.env.RESEND_API_KEY
+  ) {
+    return NextResponse.json(
+      { error: "The server is not configured to accept submissions yet." },
+      { status: 500 }
+    );
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+
   const body = await request.json();
   const { name, email, context, message, giftSlug } = body as {
     name?: string;
