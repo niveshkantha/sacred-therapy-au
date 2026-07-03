@@ -243,3 +243,51 @@ Set as **non-secret**, scoped to `builds,functions,runtime,post_processing`, con
 ### Verified working end-to-end (infra)
 Push→build→publish confirmed; `GET /api/begin`→405, `POST {}`→400 (validation reached, all env resolved).
 A full submission test (real `subscribers` row + gift email) was the last optional step.
+
+## ✅ Completed Tasks (Session 2026-07-03, continued)
+
+**Client-facing project update PDF**
+- Generated `H:\Sacred Therapy\Sacred Therapy AU - Website Update (3 July 2026).pdf` (5-page,
+  brand-styled, non-technical) covering what was built, why each major decision was made, deployment
+  setup, and remaining launch steps. Deliberately saved **outside** the git repo since the repo is public.
+- Built with `reportlab` (installed via `py -3 -m pip install reportlab`). Source script kept in
+  scratchpad — not committed. Regenerate by re-running the script if the state changes.
+
+**Resend sending domain verified — real visitors now receive gift emails (major)**
+- Added `sacredtherapy.co` in Resend; DKIM (TXT `resend._domainkey`), SPF (TXT `send`), and MX (`send`)
+  all show **Verified** as of 2026-07-03 ~1:56 PM. No DMARC yet — optional, deferred.
+- Swapped `from:` in `src/app/api/begin/route.ts` from `onboarding@resend.dev` → verified sender (see below).
+- Commit `6e92656`.
+
+**Gift email tone rewrite — Gmail Promotions-tab mitigation**
+- First real send from `hello@sacredtherapy.co` delivered fine but landed in Gmail's **Promotions** tab.
+  Root cause: brand-new sending domain (no sender reputation) + marketing-shaped HTML (all-caps
+  brand kicker, styled H1, styled CTA link).
+- Rewrote the email body to read as a personal note: dropped the "SACRED THERAPY AU" all-caps kicker,
+  dropped the H1, replaced the "Listen in the Sound Sanctuary →" button with a plain URL, signed off
+  "— Neshi", tightened the styling.
+- **Added a plain-text alternative** to the Resend payload alongside the HTML. Gmail heavily weights
+  presence of a real `text:` version — HTML-only sends look like bulk mail.
+- Commit `0173480`.
+
+**Sender identity switched to a personal name**
+- `from:` now `Neshi J <neshi@sacredtherapy.co>` (was `Sacred Therapy AU <hello@sacredtherapy.co>`).
+- Rationale: personal name + non-role address is another Promotions-tab lever. Any address at the
+  verified domain works — no re-verification needed.
+- Commit `f33e07f`.
+
+### Deliverability follow-ups (only if Promotions tab persists)
+- **Domain reputation warms up over the first ~20–30 sends** — even ideal content lands in Promotions
+  initially. Manually dragging a test send from Promotions → Primary trains Gmail's classifier for
+  that inbox and contributes to the domain's reputation signals.
+- If it's still Promotions-defaulting after that many sends: consider adding a DMARC TXT record
+  (`_dmarc.sacredtherapy.co` → `v=DMARC1; p=none; rua=mailto:...`) and reducing the HTML link count
+  further (currently just one). Do NOT re-add List-Unsubscribe headers — those are bulk-sender signals
+  and push toward Promotions, not away.
+
+### Remaining before public launch (updated)
+- ~~**Verify a sending domain in Resend**~~ — done 2026-07-03.
+- **Decide on repo visibility** (public exposes internal docs).
+- Consider moving the 248 MB of `public/` audio/video out of Git (Git LFS or Supabase Storage/CDN).
+- Delete the redundant Netlify site `sacred-therapy-au` (siteId `4c1a429b-9947-4a03-99dd-fdbc437bc6b8`)
+  — still holds copies of the secret env vars.
