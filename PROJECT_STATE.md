@@ -1,0 +1,179 @@
+# Sacred Therapy AU — Project State
+
+## Current Objective
+Build a production-grade Next.js website for Sacred Therapy AU—a premium digital wellness platform. Phase 1 MVP: brand identity, 8+ core pages with video/audio integration, responsive design, and email-gated audio preview system.
+
+## Relevant Architecture
+- **Framework**: Next.js 15 App Router, React 19, TypeScript
+- **Styling**: Tailwind CSS v4 with `@theme` inline for CSS custom properties
+- **Design System**: 7-color palette (cream, beige, whisper, espresso, sand, honey, deep) + Cormorant Garamond (serif) + Inter (sans) fonts
+- **Animations**: `.breathe` (7s scale pulse), `.breathe-slow` (11s), `.reveal` (fade-in-up on scroll), 60-step smooth fade (3 seconds)
+- **Audio Player**: HTML5 `<audio>` with real metadata, seek scrubber, play/pause, progress tracking
+- **Preview Gate**: 60-second audio limit → volume fade-out (3s) → soft modal overlay → email capture → sessionStorage-scoped bypass for rest of session
+- **Backend (email capture)**: Supabase project `sacred-therapy-au` (ref `yuklypiwiketyslzfuel`, org "Nivesh", region ap-southeast-2, free tier) + Resend for transactional email. `/api/begin` route inserts submissions and sends a matched-audio "gift" email. Secrets in `.env.local` (gitignored). No auth/accounts — site is intentionally all-free for now.
+
+## Files Already Changed (This Session)
+- `src/app/sound-sanctuary/page.tsx` — audio player, 8 tracks, mood filters, preview gate logic
+- `src/app/page.tsx` — hero video, founder section, testimonials, membership preview
+- `src/app/breathwork/page.tsx` — video hero, practice grid, live class schedule (June 28 + Aug 30)
+- `src/app/membership/page.tsx` — 3 tiers: Free (→ /begin), $29/month (Coming soon), $290/year (Coming soon)
+- `src/app/begin/page.tsx` — contact form with 7 mood pill options
+- `src/app/about/page.tsx` — founder bio, credentials, pull quotes (all "Neshantha" → "Neshi")
+- `globals.css` — complete design system (colors, utilities, keyframes)
+- `src/components/FlowerOfLife.tsx` — SVG sacred geometry (19 circles)
+- `.claude/launch.json` — dev server config (port 3456)
+- `/public/audio/` — 9 guided sessions (see catalog below); `returning-to-the-body.mp3` no longer exists
+- `/public/images/` — brand images incl. `founder-neshi1.png` (about page hero, replaced `hero-stillness.jpg` there), `founder-neshi.jpg`, `sanctuary-candle.jpg`, `journey-*.jpg`
+- `/public/video/` — hero.mp4, breathwork.mp4
+
+## Current Audio Player Implementation
+**Component**: `src/app/sound-sanctuary/page.tsx` (immersive full-screen overlay)
+
+**Track Data Structure** (9 total, all with real audio):
+```ts
+interface Track { slug: string; title: string; feeling: Feeling; duration: string | null; src: string }
+```
+- Taxonomy switched from `mood` → `feeling` (emotional-state entry tags: "I feel anxious",
+  "I feel emotionally overwhelmed", "I feel drained", "I can't sleep", "I feel stuck",
+  "I feel disconnected", "I want confidence"). Filter chips + card labels + player label all use `feeling`.
+- Modeled on the breathwork `PRACTICES` convention (typed interface + union type + slug `id`).
+
+**Catalog (9 real tracks, all playable):**
+| slug | title | feeling | duration |
+|---|---|---|---|
+| rejuvenating-inner-energy | Rejuvenating Your Inner Energy | I feel drained | 13 min |
+| sacred-stillness | Sacred Stillness | I feel emotionally overwhelmed | 23 min |
+| soft-landing | Soft Landing | I can't sleep | 7 min |
+| woodland-mirror-radical-acceptance | The Woodland Mirror: A Journey of Radical Acceptance | I feel disconnected | 13 min |
+| mirroring-water-mindset-alignment | Mirroring the Water: Deep Mindset Alignment & Core Clarity | I feel stuck | 13 min |
+| 10-step-descent-to-clarity | Into Clarity: A Guided Descent | I feel stuck | 13 min |
+| brilliant-white-light-awareness | Brilliant White Light: A Journey of Connected Awareness | I feel disconnected | 14 min |
+| the-reset-subconscious-blueprinting | The Reset: Subconscious Blueprinting | I want confidence | 10 min |
+| patience-and-intention | Patience & Intention | I feel anxious | 8 min |
+
+- Durations auto-detected from audio metadata in-browser (`loadedmetadata`), rounded to whole minutes.
+- **Preview/email gate is DISABLED** this pass via `GATE_ENABLED = false` — all logic kept intact
+  for the follow-up task; playback is raw (verified continuous past 60s, no modal).
+- "Into Clarity: A Guided Descent" = display title only; file stays `10-step-descent-to-clarity.mp3`.
+- Tracks have no `desc` field yet (founder to supply copy) — card description line removed for now.
+
+**Removed** (replaced by the real catalog):
+- "Returning to the Body" — its audio file was deleted (`returning-to-the-body.mp3` no longer exists).
+- Placeholder silent tracks: "She Who Comes Home", "Hold the Tender One", "Let It Move Through",
+  "The Quiet Voice", "Anchor & Arrive".
+- Homepage `sanctuaryTracks` preview updated to 3 real tracks (Soft Landing, Sacred Stillness, Rejuvenating).
+
+**Player UI**:
+- Flower of Life (breathing animation when playing)
+- Mood label + title + formatted time (current / total)
+- Interactive progress bar (click to seek)
+- Play/pause toggle (honey-colored)
+- Previous/next buttons (disabled)
+
+**Gate Logic**:
+1. Audio plays normally for 60 seconds
+2. At 60s mark: `startFadeOut()` reduces volume 1→0 over 3 seconds (60 steps via setInterval)
+3. After fade completes: audio pauses, volume reset to 1, modal fades in
+4. User submits email → `sessionStorage.setItem(GATE_STORAGE_KEY, 'true')`
+5. Modal fades out (500ms delay), audio resumes from pause point
+6. Session flag prevents re-gating for remaining session
+
+## Completed Work
+✅ All Phase 1 pages built and styled  
+✅ Brand design system (colors, fonts, animations, utilities)  
+✅ Video backgrounds (homepage hero, breathwork page)  
+✅ Audio player with real metadata support  
+✅ 60-second preview gate with smooth fade + soft modal  
+✅ Founder name updated to "Neshi" throughout  
+✅ Membership tiers (Free active, $29/$290 deferred)  
+✅ Breathwork live classes with optional fields ("TBA" support)  
+✅ Contact form at /begin  
+✅ All 6 brand images integrated  
+✅ 2 audio tracks playable (returning-to-the-body, sacred-stillness)  
+
+## ✅ Completed Task (This Session)
+**Audio Integration for "The Soft Landing" Track**
+1. Copied `Somatic Weight & Renewal (Guided Grounding Session).mp3` → `/public/audio/soft-landing.mp3`
+2. Updated `src/app/sound-sanctuary/page.tsx` line 14 to add `src: "/audio/soft-landing.mp3"`
+3. Verified in browser: player displays "0:02 / 7:22" (audio loaded, metadata parsed correctly)
+4. No console errors—audio plays with full 60-second preview gate active
+
+**Playing Tracks** (now 3/8):
+- "Returning to the Body" (Anxiety, 13:29)
+- "Sacred Stillness" (Stillness, 23:23)
+- "The Soft Landing" (Sleep, 7:22) ✨ *just added*
+
+## ✅ Completed Task (This Session)
+**Reconciled displayed track durations with real audio metadata**
+- Card durations for the 3 playing tracks were stale placeholders (22/38/45 min) that contradicted the real audio.
+- Updated `src/app/sound-sanctuary/page.tsx` grid: Returning "13 min", Soft Landing "7 min", Sacred Stillness "23 min".
+- Updated `src/app/page.tsx` homepage `sanctuaryTracks` preview: Returning "13 min", Soft Landing "7 min" (Sacred Stillness not in preview).
+- Silent tracks (no audio) left with their placeholder estimates.
+- Verified in browser (port 3456): both `/` and `/sound-sanctuary` render corrected durations, no server errors.
+
+## ✅ Completed Task (This Session)
+**Wired 9 real guided-audio sessions into the Sound Sanctuary**
+1. Renamed 9 files in `public/audio/` (stripped a doubled `.mp3.mp3` extension → clean slugs).
+2. Extended the existing inline tracks source; restructured to the breathwork typed-array convention
+   (`interface Track` + `Feeling` union). New taxonomy = emotional-state entry tags.
+3. Added all 9 tracks (slug, title, feeling, src); auto-detected durations from audio metadata.
+4. Disabled the preview/email gate (`GATE_ENABLED = false`) — raw playback only, logic preserved for follow-up.
+5. Verified in browser (port 3456): all 9 render as cards, filter chips work, playback confirmed
+   (The Reset played, continued past 60s with no gate), no console/server errors. All 9 files load metadata OK.
+
+**Follow-ups flagged:**
+- Track descriptions (`desc`) — founder to supply copy; card description line currently omitted.
+- Re-enable the 60-second preview + email-capture gate (separate task).
+
+## ✅ Completed Task (This Session)
+**About page edits**
+1. Bio copy tweak in `src/app/about/page.tsx`: opening line changed from an em-dash break to a comma —
+   "He came to it the way most healers do, slowly, and by needing it himself first." — matching
+   founder-supplied phrasing.
+2. Removed the "Healing isn't about becoming someone new..." pull-quote section entirely (was between the credentials list and "A Note From Neshi").
+3. Swapped the about-page hero image from `hero-stillness.jpg` to `/images/founder-neshi1.png` (Neshi on the wooden deck overlooking the ocean, Sri Lanka retreat photo) — file is a `.png` despite the filename implying a photo, verify extension before reusing this asset elsewhere.
+4. Verified in browser: bio text, quote removal, and new hero image all render correctly on `/about`.
+
+## ✅ Completed Tasks (Session 2026-07-03)
+
+**Email-capture pipeline — "Collect Your Key" free-tier lead flow (major)**
+- **Strategy decided with founder**: keep the whole site free for now (no accounts, no auth, no paywall); defer paid tiers ($29/$290) until traffic justifies. Goal for now = grow the email list. Chose Resend (over Formspree) for personalized email, and a new Supabase project (over Sheets) for a real subscriber list.
+- **Supabase**: created project `sacred-therapy-au` (ref `yuklypiwiketyslzfuel`). Table `subscribers` (id uuid pk, name, email unique, feeling, message, gift_track_slug, created_at).
+- **Resend**: account owned by founder; `re_...` key in `.env.local`. ⚠️ Unverified accounts can only send to the account owner's own email (niveshkantha@gmail.com) — must verify a sending domain before real visitors, and before Netlify launch.
+- **New files**: `src/lib/gifts.ts` (feeling→track map: anxious→Patience & Intention, overwhelmed→Sacred Stillness, disconnected→Woodland Mirror, burnt-out→Rejuvenating Inner Energy, seeking-confidence→The Reset; DEFAULT=Soft Landing), `src/lib/supabaseAdmin.ts` (service-role client, server-only), `src/app/api/begin/route.ts` (validates → upsert on email → Resend gift email).
+- **Frontend wiring**: homepage feeling tiles now link `/begin?feeling=<slug>`; `/begin` reads the slug (Suspense-wrapped `useSearchParams`), pre-selects the matching chip, and submits for real to `/api/begin` with submitting/error states; thank-you screen names the gift track.
+- **Env vars** (`.env.local`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `NEXT_PUBLIC_SITE_URL`. All five must be added to Netlify on deploy, with `NEXT_PUBLIC_SITE_URL` pointed at the real domain (used in the email's "Listen in the Sound Sanctuary" link).
+- **Installed**: `@supabase/supabase-js`.
+- **Verified end-to-end**: submitted "Burnt out" path → row landed in `subscribers` (gift_track_slug `rejuvenating-inner-energy`), Resend returned ok, thank-you screen correct, no server errors.
+
+**Membership redesign (both the `/membership` page AND the homepage preview block in `page.tsx`)**
+- Sanctuary ($29) is not on offer, so it can't be "most chosen": moved the featured dark/gold theme (bg-deep, glow, scale, ribbon) from The Sanctuary to **The Quiet Path** (the only available tier).
+- Sanctuary `note` "Most chosen" → "Coming soon"; its card is now a plain light card.
+- Free-tier CTA renamed "Sign up free" → **"Collect your key"**; on the dark featured card it's a solid-gold fill (`bg-honey text-deep`). The "MOST CHOSEN" ribbon is also solid gold — the two match.
+- `/membership` subhead: "...Choose the key to open the door that feels right for now."
+- Nav label "Membership" → **"Collect Your Key"** (route still `/membership`).
+
+**Copy / content**
+- Homepage "How are you feeling lately?" subhead → "There's no wrong answer, just what's true for you right now. Share it, and we'll inbox you a small care package curated for you."
+- Removed the testimonial section entirely ("Eliza, Byron Bay" — was between Promise and Membership on the homepage).
+- `/begin` form reordered: chips → share textarea → name → email (contact details last, matching "no pressure" ethos); added email microcopy "Just so we know where to send a reply. No newsletters unless you ask."; added gift line to subhead.
+- Breathwork: June 28 live class now shows "Completed" (added `completed?` flag) instead of "Register interest"; Aug 30 still active. Every guided-practice card now has a "Coming Soon" pill (audio not yet live).
+
+**Design / legibility**
+- `SiteHeader`: added a top gradient scrim + bumped nav links to `text-foreground/90 font-medium` so they read over bright hero images.
+- About page hero image swapped `founder-neshi1.png` → `founder-neshi2.png`.
+- `/begin` background image opacity `opacity-10` → `opacity-30`; form text lifted ~20% (labels off muted-foreground to `text-foreground/75`, etc.).
+- `SiteFooter`: link columns, section headings (`!text-foreground/70` over `.label-caps`), Privacy/Terms, and bottom row all lifted for legibility.
+
+## ⚠️ Recurring Dev Server Issue — Stale `.next/dev/lock`
+Symptom: `preview_start` reports success but the server immediately disappears from `preview_list`,
+or a plain `npx next dev` run prints `⨯ Another next dev server is already running` even though
+nothing is actually listening on the port.
+
+Root cause: `.next/dev/lock` records the PID that last held port 3456. If that process was killed
+without a clean exit (or the OS later recycles the PID for an unrelated process), Next.js still
+honors the lock and refuses to start a second dev server for this project directory.
+
+Fix: confirm nothing is actually listening on the port (`Get-NetTCPConnection -LocalPort 3456`),
+then delete `.next/dev/lock` and restart via `preview_start`. Happened twice this session (2026-07-02);
+if it recurs, this is the first thing to check before deeper debugging.
