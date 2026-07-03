@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { getGift } from "@/lib/gifts";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3456";
@@ -19,6 +19,14 @@ export async function POST(request: Request) {
   }
 
   const gift = getGift(giftSlug ?? null);
+  let supabaseAdmin: ReturnType<typeof getSupabaseAdmin>;
+
+  try {
+    supabaseAdmin = getSupabaseAdmin();
+  } catch (error) {
+    console.error("Supabase configuration error:", error);
+    return NextResponse.json({ error: "Server configuration error." }, { status: 500 });
+  }
 
   const { error: dbError } = await supabaseAdmin.from("subscribers").upsert(
     {
