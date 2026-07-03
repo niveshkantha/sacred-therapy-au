@@ -63,15 +63,26 @@ export async function POST(request: Request) {
       from: "Sacred Therapy AU <hello@sacredtherapy.co>",
       to: email,
       subject: "A little something to begin with",
+      text: `Hi ${name},
+
+Thank you for reaching out. Based on what you shared, I thought "${gift.trackTitle}" might meet you where you are.
+
+You can listen here: ${listenUrl}
+
+I'll be in touch personally soon — gently, and without rush.
+
+— Neshi
+Sacred Therapy AU
+
+(No newsletters unless you ask. Just this.)`,
       html: `
-        <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; color: #3a2e26; line-height: 1.6;">
-          <p style="letter-spacing: 0.15em; text-transform: uppercase; font-size: 11px; color: #a68a6d;">Sacred Therapy AU</p>
-          <h1 style="font-size: 22px; font-weight: normal;">Thank you, ${name}.</h1>
-          <p>This is our first gift to you — no pressure, no scripts, just a place to begin.</p>
-          <p>Based on what you shared, we thought <strong>${gift.trackTitle}</strong> might meet you where you are.</p>
-          <p><a href="${listenUrl}" style="color: #a68a6d;">Listen in the Sound Sanctuary &rarr;</a></p>
-          <p style="margin-top: 32px; font-size: 13px; color: #8a7a6d;">Neshi will also be in touch personally, gently and without rush.</p>
-          <p style="font-size: 12px; color: #a99b8d;">No newsletters unless you ask. Just this.</p>
+        <div style="font-family: Georgia, serif; max-width: 520px; color: #3a2e26; line-height: 1.6; font-size: 15px;">
+          <p>Hi ${name},</p>
+          <p>Thank you for reaching out. Based on what you shared, I thought <strong>${gift.trackTitle}</strong> might meet you where you are.</p>
+          <p>You can listen here: <a href="${listenUrl}" style="color: #a68a6d;">${listenUrl}</a></p>
+          <p>I'll be in touch personally soon — gently, and without rush.</p>
+          <p>— Neshi<br/>Sacred Therapy AU</p>
+          <p style="font-size: 12px; color: #8a7a6d;">No newsletters unless you ask. Just this.</p>
         </div>
       `,
     }),
