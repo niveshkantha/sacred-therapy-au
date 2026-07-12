@@ -38,7 +38,7 @@ interface Track { slug: string; title: string; feeling: Feeling; duration: strin
   "I feel disconnected", "I want confidence"). Filter chips + card labels + player label all use `feeling`.
 - Modeled on the breathwork `PRACTICES` convention (typed interface + union type + slug `id`).
 
-**Catalog (9 real tracks, all playable):**
+**Catalog (12 real tracks, all playable):**
 | slug | title | feeling | duration |
 |---|---|---|---|
 | rejuvenating-inner-energy | Rejuvenating Your Inner Energy | I feel drained | 13 min |
@@ -50,6 +50,9 @@ interface Track { slug: string; title: string; feeling: Feeling; duration: strin
 | brilliant-white-light-awareness | Brilliant White Light: A Journey of Connected Awareness | I feel disconnected | 14 min |
 | the-reset-subconscious-blueprinting | The Reset: Subconscious Blueprinting | I want confidence | 10 min |
 | patience-and-intention | Patience & Intention | I feel anxious | 8 min |
+| awakening-the-glow-mindset-balance | Awakening the Glow: Mindset Balance | I want confidence | 15 min |
+| floating-into-stillness-river-meditation | Floating into Stillness: River Meditation | I feel emotionally overwhelmed | 15 min |
+| floating-free-positive-transformation | Floating Free: Sinking Deep into Positive Transformation | I feel stuck | 17 min |
 
 - Durations auto-detected from audio metadata in-browser (`loadedmetadata`), rounded to whole minutes.
 - **Preview/email gate is DISABLED** this pass via `GATE_ENABLED = false` — all logic kept intact
@@ -288,6 +291,33 @@ A full submission test (real `subscribers` row + gift email) was the last option
 ### Remaining before public launch (updated)
 - ~~**Verify a sending domain in Resend**~~ — done 2026-07-03.
 - **Decide on repo visibility** (public exposes internal docs).
-- Consider moving the 248 MB of `public/` audio/video out of Git (Git LFS or Supabase Storage/CDN).
+- Consider moving the ~340 MB of `public/` audio out of Git (Git LFS or Supabase Storage/CDN) — see
+  the compression note below; the two are the same cleanup.
 - Delete the redundant Netlify site `sacred-therapy-au` (siteId `4c1a429b-9947-4a03-99dd-fdbc437bc6b8`)
   — still holds copies of the secret env vars.
+
+## ✅ Completed Task (Session 2026-07-13)
+**Added 3 guided sessions to the Sound Sanctuary (9 → 12 tracks)**
+1. Files arrived in `public/audio/` already saved under the target kebab-case slugs (no rename needed):
+   `awakening-the-glow-mindset-balance.mp3`, `floating-into-stillness-river-meditation.mp3`,
+   `floating-free-positive-transformation.mp3`.
+2. Extended the existing `tracks` array in `src/app/sound-sanctuary/page.tsx` (same data source, same
+   TrackCard/player wiring — no new components, no second array). New entries:
+   - Awakening the Glow: Mindset Balance — "I want confidence" — 15 min
+   - Floating into Stillness: River Meditation — "I feel emotionally overwhelmed" — 15 min
+   - Floating Free: Sinking Deep into Positive Transformation — "I feel stuck" — 17 min
+3. Durations set from real audio metadata (899/901/1042s → 15/15/17 min). ffmpeg/ffprobe not installed
+   in this env; read durations via Python `mutagen` (`py -3 -m pip install mutagen`).
+4. Preview/email gate left OFF (`GATE_ENABLED = false`) — raw playback, consistent with the other tracks.
+5. Verified on dev server (:3456): all 12 cards render with correct title/feeling/duration; all 3 new
+   files load metadata cleanly; "Floating Free" played (currentTime advanced); no console errors.
+   (Browser-pane screenshot tool hung on a renderer issue unrelated to the change — verified via DOM/JS.)
+6. Commit `337a7a2`, pushed to `main`.
+
+**⚠️ Deferred: audio compression (founder said leave as-is for now, 2026-07-13)**
+- The 3 new files are large: 35 MB / 35 MB / 40 MB — each exceeds the 15 MB flag threshold. Total
+  `public/audio/` is now ~340 MB across 12 files (several existing ones are also 30–35 MB).
+- Recommended pass when revisited: ffmpeg re-encode guided-voice audio to ~96–128 kbps CBR (mono is
+  fine for spoken word) — roughly 60–70% smaller with no meaningful quality loss (e.g. 40 MB → ~12–14 MB).
+- This is the same cleanup as "move audio out of Git" above — do them together. No visitor-facing impact;
+  purely load-time/bandwidth + CI checkout size. ffmpeg is NOT installed locally — install before running.
