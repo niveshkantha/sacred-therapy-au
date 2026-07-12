@@ -47,6 +47,9 @@ const tracks: Track[] = [
   { slug: "brilliant-white-light-awareness", title: "Brilliant White Light: A Journey of Connected Awareness", feeling: "I feel disconnected", duration: "14 min", src: "/audio/brilliant-white-light-awareness.mp3" },
   { slug: "the-reset-subconscious-blueprinting", title: "The Reset: Subconscious Blueprinting", feeling: "I want confidence", duration: "10 min", src: "/audio/the-reset-subconscious-blueprinting.mp3" },
   { slug: "patience-and-intention", title: "Patience & Intention", feeling: "I feel anxious", duration: "8 min", src: "/audio/patience-and-intention.mp3" },
+  { slug: "awakening-the-glow-mindset-balance", title: "Awakening the Glow: Mindset Balance", feeling: "I want confidence", duration: "15 min", src: "/audio/awakening-the-glow-mindset-balance.mp3" },
+  { slug: "floating-into-stillness-river-meditation", title: "Floating into Stillness: River Meditation", feeling: "I feel emotionally overwhelmed", duration: "15 min", src: "/audio/floating-into-stillness-river-meditation.mp3" },
+  { slug: "floating-free-positive-transformation", title: "Floating Free: Sinking Deep into Positive Transformation", feeling: "I feel stuck", duration: "17 min", src: "/audio/floating-free-positive-transformation.mp3" },
 ];
 
 function formatTime(seconds: number) {
